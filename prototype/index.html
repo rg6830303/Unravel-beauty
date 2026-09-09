@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unravel Beauty Secrets — Botanical Atelier Storefront</title>
+  <meta name="description" content="Redesigned high-performance Ayurvedic beauty storefront for Unravel Beauty Secrets. Handcrafted botanical rituals rooted in Ayurveda.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Floating Botanical Ambient Motion Graphics -->
+  <div class="botanical-canvas" aria-hidden="true">
+    <span class="floating-petal">🌸</span>
+    <span class="floating-petal">🍃</span>
+    <span class="floating-petal">🌿</span>
+    <span class="floating-petal">✨</span>
+  </div>
+
+
+  <!-- Announcement Bar -->
+  <aside class="announcement-bar" role="region" aria-label="Announcement">
+    Free domestic shipping on orders above ₹1,999
+  </aside>
+
+  <!-- Main Header -->
+  <header class="main-header">
+    <div class="header-container">
+      <button class="mobile-menu-toggle" onclick="openDrawer('mobile-nav')" aria-label="Open Navigation Menu">
+        ☰
+      </button>
+
+      <a href="#" class="brand-logo" onclick="navigateTo('home'); return false;">
+        <span class="brand-wordmark">unravel</span>
+        <span class="brand-subtitle">BEAUTY SECRETS</span>
+      </a>
+
+      <nav aria-label="Primary Navigation">
+        <ul class="nav-links">
+          <li class="mega-menu-trigger">
+            <a href="#" class="nav-link active" data-route="department" data-dept="skin-care" onclick="navigateTo('department', 'skin-care'); return false;" onmouseenter="document.getElementById('mega-menu').classList.add('active');" onmouseleave="document.getElementById('mega-menu').classList.remove('active');">
+              Skin
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link" data-route="department" data-dept="hair-care" onclick="navigateTo('department', 'hair-care'); return false;">
+              Hair
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link" data-route="department" data-dept="body-care" onclick="navigateTo('department', 'body-care'); return false;">
+              Body
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link" data-route="department" data-dept="wellness" onclick="navigateTo('department', 'wellness'); return false;">
+              Wellness
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link" data-route="about" onclick="navigateTo('about'); return false;">
+              Our Story
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link" data-route="masterclass" onclick="navigateTo('masterclass'); return false;">
+              Masterclass
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="header-actions">
+        <button class="header-icon-btn" onclick="openDrawer('search')" aria-label="Search Catalog" title="Search">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </button>
+        <button class="header-icon-btn" onclick="navigateTo('account')" aria-label="My Account" title="My Account">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </button>
+        <button class="header-icon-btn" onclick="navigateTo('wishlist')" aria-label="Wishlist" title="Wishlist">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          <span class="icon-badge wishlist-badge-count">2</span>
+        </button>
+        <button class="header-icon-btn" onclick="openDrawer('mini-bag')" aria-label="Shopping Bag" title="Shopping Bag">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+          <span class="icon-badge cart-badge-count">2</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mega Menu Dropdown -->
+    <div id="mega-menu" class="mega-menu" onmouseenter="this.classList.add('active');" onmouseleave="this.classList.remove('active');">
+      <div class="mega-menu-grid">
+        <div>
+          <h4 class="mega-column-title">Shop by Category</h4>
+          <ul class="mega-links-list">
+            <li class="mega-link-item"><a href="#" onclick="AppState.activeDepartment='skin-care'; AppState.activeCategoryFilter='facial-oils'; navigateTo('department', 'skin-care'); return false;">Face Serums & Oils</a></li>
+            <li class="mega-link-item"><a href="#" onclick="AppState.activeDepartment='skin-care'; AppState.activeCategoryFilter='moisturisers'; navigateTo('department', 'skin-care'); return false;">Moisturisers</a></li>
+            <li class="mega-link-item"><a href="#" onclick="AppState.activeDepartment='skin-care'; AppState.activeCategoryFilter='toners'; navigateTo('department', 'skin-care'); return false;">Toners & Waters</a></li>
+            <li class="mega-link-item"><a href="#" onclick="AppState.activeDepartment='skin-care'; AppState.activeCategoryFilter='face-packs-scrub'; navigateTo('department', 'skin-care'); return false;">Face Packs & Scrubs</a></li>
+            <li class="mega-link-item"><a href="#" onclick="AppState.activeDepartment='skin-care'; AppState.activeCategoryFilter='handcrafted-soaps'; navigateTo('department', 'skin-care'); return false;">Handcrafted Soaps</a></li>
+            <li class="mega-link-item"><a href="#" onclick="navigateTo('daily-rituals'); return false;">Daily Skincare Routines (AM/PM)</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="mega-column-title">Shop by Concern</h4>
+          <ul class="mega-links-list">
+            <li class="mega-link-item"><a href="#" onclick="AppState.activeDepartment='skin-care'; AppState.activeConcernFilter='brightening'; navigateTo('department', 'skin-care'); return false;">Brightening & Radiance</a></li>
+            <li class="mega-link-item"><a href="#" onclick="AppState.activeDepartment='skin-care'; AppState.activeConcernFilter='anti-tan'; navigateTo('department', 'skin-care'); return false;">Anti-Tan & Sun Care</a></li>
+            <li class="mega-link-item"><a href="#" onclick="AppState.activeDepartment='skin-care'; AppState.activeConcernFilter='anti-acne'; navigateTo('department', 'skin-care'); return false;">Anti-Acne & Clarifying</a></li>
+            <li class="mega-link-item"><a href="#" onclick="AppState.activeDepartment='skin-care'; AppState.activeConcernFilter='anti-ageing'; navigateTo('department', 'skin-care'); return false;">Anti-Ageing & Firming</a></li>
+            <li class="mega-link-item"><a href="#" onclick="AppState.activeDepartment='skin-care'; AppState.activeConcernFilter='dehydration'; navigateTo('department', 'skin-care'); return false;">Deep Dehydration</a></li>
+            <li class="mega-link-item"><a href="#" onclick="AppState.activeDepartment='skin-care'; AppState.activeConcernFilter='skin-pigmentation'; navigateTo('department', 'skin-care'); return false;">Pigmentation & Spots</a></li>
+          </ul>
+        </div>
+        <div class="mega-featured-card">
+          <span class="eyebrow">Featured Iconic Formula</span>
+          <div class="mega-featured-image">
+            <span style="font-size: 3.5rem;">🏺</span>
+          </div>
+          <h4 class="serif-editorial" style="font-size: 1.15rem;">Kumkumadi Facial Oil</h4>
+          <p style="font-size: 0.85rem; color: var(--color-text-muted);">22 Ayurvedic herbs with Kashmiri Saffron and Red Sandalwood for radiant overnight renewal.</p>
+          <button class="btn-primary" style="padding: 10px 16px; font-size: 0.75rem;" onclick="navigateTo('product:kumkumadi-facial-oil')">Discover Ritual — ₹675</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View Container -->
+  <main id="main-content" role="main"></main>
+
+  <!-- Global Footer -->
+  <footer class="main-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div>
+          <div class="footer-wordmark">unravel</div>
+          <p class="footer-tagline">
+            Thoughtfully crafted skin, hair, and body rituals formulated with pure botanicals, cold-pressed oils, and ancient Ayurvedic wisdom in Kolkata, India.
+          </p>
+          <div style="font-size: 0.82rem; color: var(--color-blush); line-height: 1.6;">
+            <strong>Atelier Address:</strong><br>
+            9A Kailash Pandit Lane, New Alipore,<br>
+            Kolkata 700053, West Bengal
+          </div>
+        </div>
+        <div>
+          <h4 class="footer-heading">Departments</h4>
+          <ul class="footer-links">
+            <li><a href="#" onclick="navigateTo('department', 'skin-care'); return false;">Skin Care</a></li>
+            <li><a href="#" onclick="navigateTo('department', 'hair-care'); return false;">Hair Care</a></li>
+            <li><a href="#" onclick="navigateTo('department', 'body-care'); return false;">Body Care</a></li>
+            <li><a href="#" onclick="navigateTo('department', 'wellness'); return false;">Health & Wellness</a></li>
+            <li><a href="#" onclick="navigateTo('daily-rituals'); return false;">Daily Routines</a></li>
+            <li><a href="#" onclick="navigateTo('shop'); return false;">Shop All</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-heading">Client Care</h4>
+          <ul class="footer-links">
+            <li><a href="#" onclick="navigateTo('about'); return false;">Our Story</a></li>
+            <li><a href="#" onclick="navigateTo('masterclass'); return false;">Masterclass</a></li>
+            <li><a href="#" onclick="navigateTo('delivery-returns'); return false;">Delivery & Returns</a></li>
+            <li><a href="#" onclick="navigateTo('terms'); return false;">Terms & Conditions</a></li>
+            <li><a href="#" onclick="navigateTo('privacy-policy'); return false;">Privacy Policy</a></li>
+            <li><a href="#" onclick="openDrawer('support'); return false;">Help & Support</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer-heading">Keep in Touch</h4>
+          <p style="font-size: 0.85rem; color: var(--color-blush); line-height: 1.5;">
+            Receive thoughtful updates about new botanical harvests, workshop sessions, and seasonal formulations.
+          </p>
+          <form class="newsletter-form" onsubmit="event.preventDefault(); showToast('Thank you for subscribing to our newsletter!'); this.reset();">
+            <input type="email" class="newsletter-input" placeholder="Your email address" required>
+            <button type="submit" class="newsletter-btn">Sign Up</button>
+          </form>
+          <div style="margin-top: 20px;">
+            <span style="font-size: 0.8rem; color: var(--color-blush);">Direct Contact:</span>
+            <a href="mailto:support@unravelbeautysecrets.in" style="display: block; font-size: 0.85rem; color: #FFF; margin-top: 4px;">support@unravelbeautysecrets.in</a>
+            <span style="display: block; font-size: 0.85rem; color: #FFF; margin-top: 2px;">+91 9903398080</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>© 2026 Unravel Beauty Secrets. All rights reserved.</span>
+        <div class="footer-socials">
+          <a href="https://www.instagram.com/unravelbeautysecrets/" target="_blank" rel="noopener noreferrer" style="color: inherit;">Instagram</a>
+          <span>•</span>
+          <a href="https://www.facebook.com/unravelbeautysecrets" target="_blank" rel="noopener noreferrer" style="color: inherit;">Facebook</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Drawer Backdrop -->
+  <div id="drawer-backdrop" class="drawer-backdrop"></div>
+
+  <!-- Mini-Bag Drawer -->
+  <aside id="mini-bag-drawer" class="side-drawer" role="dialog" aria-label="Mini Shopping Bag">
+    <div class="drawer-header">
+      <h3 class="drawer-title">Your Ritual Bag</h3>
+      <button class="drawer-close-btn" onclick="closeAllDrawers()" aria-label="Close Bag">✕</button>
+    </div>
+    <div id="mini-bag-body" class="drawer-body"></div>
+    <div id="mini-bag-footer" class="drawer-footer"></div>
+  </aside>
+
+  <!-- Support Drawer -->
+  <aside id="support-drawer" class="side-drawer" role="dialog" aria-label="Support Drawer">
+    <div class="drawer-header">
+      <h3 class="drawer-title">A Little Help?</h3>
+      <button class="drawer-close-btn" onclick="closeAllDrawers()" aria-label="Close Support">✕</button>
+    </div>
+    <div class="drawer-body">
+      <span class="eyebrow">Customer Concierge</span>
+      <p style="color: var(--color-text-muted); font-size: 0.92rem; line-height: 1.6; margin-bottom: 24px;">
+        We are here to assist with formulation advice, delivery queries, and masterclass inquiries.
+      </p>
+
+      <div style="border: 1px solid var(--color-border); padding: 16px; margin-bottom: 16px; background: #FFF;">
+        <strong>Support Email:</strong>
+        <p style="color: var(--color-aubergine); font-size: 0.9rem; margin-top: 4px;">support@unravelbeautysecrets.in</p>
+      </div>
+
+      <div style="border: 1px solid var(--color-border); padding: 16px; margin-bottom: 24px; background: #FFF;">
+        <strong>Phone / WhatsApp:</strong>
+        <p style="color: var(--color-aubergine); font-size: 0.9rem; margin-top: 4px;">+91 9903398080 (10am–7pm daily)</p>
+      </div>
+
+      <form onsubmit="event.preventDefault(); showToast('Message sent to our concierge desk!'); closeAllDrawers(); this.reset();">
+        <label style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 6px;">How can we help?</label>
+        <textarea placeholder="Tell us about your order or question..." rows="4" style="width: 100%; padding: 12px; border: 1px solid var(--color-border); margin-bottom: 16px;" required></textarea>
+        <button type="submit" class="btn-primary" style="width: 100%;">Send Message</button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- Mobile Nav Drawer -->
+  <aside id="mobile-nav-drawer" class="side-drawer" role="dialog" aria-label="Mobile Navigation">
+    <div class="drawer-header">
+      <span class="brand-wordmark" style="font-size: 1.8rem;">unravel</span>
+      <button class="drawer-close-btn" onclick="closeAllDrawers()" aria-label="Close Menu">✕</button>
+    </div>
+    <div class="drawer-body">
+      <ul style="list-style: none; display: flex; flex-direction: column; gap: 20px; font-family: var(--font-serif-editorial); font-size: 1.4rem;">
+        <li><a href="#" onclick="navigateTo('department', 'skin-care'); return false;">Skin Care</a></li>
+        <li><a href="#" onclick="navigateTo('department', 'hair-care'); return false;">Hair Care</a></li>
+        <li><a href="#" onclick="navigateTo('department', 'body-care'); return false;">Body Care</a></li>
+        <li><a href="#" onclick="navigateTo('department', 'wellness'); return false;">Health & Wellness</a></li>
+        <li><a href="#" onclick="navigateTo('daily-rituals'); return false;">Daily Routines</a></li>
+        <li><a href="#" onclick="navigateTo('about'); return false;">Our Story</a></li>
+        <li><a href="#" onclick="navigateTo('masterclass'); return false;">Masterclass</a></li>
+        <li><a href="#" onclick="navigateTo('account'); return false;">My Account</a></li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- Search Modal Overlay (Instant Live Search) -->
+  <div id="search-modal" class="search-modal" role="dialog" aria-label="Search Storefront" style="position: fixed; top: 0; left: 0; width: 100%; background: var(--color-ivory); border-bottom: 2px solid var(--color-border); box-shadow: 0 20px 40px rgba(42,22,33,0.18); z-index: 250; padding: 28px 0; opacity: 0; visibility: hidden; transition: var(--transition);">
+    <div class="container" style="max-width: 840px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <span class="eyebrow" style="margin-bottom: 0;">Instant Catalog Search</span>
+        <button onclick="closeAllDrawers()" style="font-size: 1.4rem; padding: 4px 8px;" aria-label="Close Search">✕</button>
+      </div>
+      
+      <div class="search-input-wrap">
+        <svg class="search-input-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="search-modal-input" class="search-modal-field" placeholder="Search by botanical ingredient, product name, or skin concern..." autocomplete="off" oninput="handleLiveSearch(this.value)" onkeydown="if(event.key==='Enter'){ AppState.searchQuery=this.value; closeAllDrawers(); navigateTo('search'); }">
+        <button id="search-clear-btn" class="search-clear-btn" onclick="clearSearchField()" aria-label="Clear Search Input">✕</button>
+      </div>
+
+      <!-- Live Results / Recommendations Container -->
+      <div id="search-live-results" class="search-live-results">
+        <div>
+          <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-light); display: block; margin-bottom: 8px;">Popular Rituals</span>
+          <div class="chips-row" style="margin-bottom: 0;">
+            <button class="chip-btn" onclick="document.getElementById('search-modal-input').value='Kumkumadi'; handleLiveSearch('Kumkumadi');">Kumkumadi Tailam</button>
+            <button class="chip-btn" onclick="document.getElementById('search-modal-input').value='Rose Water'; handleLiveSearch('Rose Water');">Rose Water</button>
+            <button class="chip-btn" onclick="document.getElementById('search-modal-input').value='Hair Oil'; handleLiveSearch('Hair Oil');">Volume Hair Oil</button>
+            <button class="chip-btn" onclick="document.getElementById('search-modal-input').value='Bridal Soap'; handleLiveSearch('Bridal Soap');">Bridal Soap</button>
+            <button class="chip-btn" onclick="document.getElementById('search-modal-input').value='Moisturiser'; handleLiveSearch('Moisturiser');">AM/PM Moisturiser</button>
+            <button class="chip-btn" onclick="document.getElementById('search-modal-input').value='Brightening'; handleLiveSearch('Brightening');">Brightening</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Application Engine -->
+  <script src="app.js"></script>
+</body>
+</html>

@@ -12,7 +12,8 @@
 ## Deploy
 1. Supabase: new project → SQL editor → run `supabase/schema.sql`. Copy URL + service_role key.
 2. Push this folder to GitHub → Vercel → Import. Add all vars from `.env.example`.
-3. Vercel cron calls `/api/cron/dispatch` every minute with `Authorization: Bearer $CRON_SECRET` (needs **Pro** plan for per-minute crons; Hobby = daily only → use cron-job.org hitting the URL with that header).
+3. Scheduler: edit and run `supabase/cron.sql` in the SQL editor. Supabase pg_cron calls `/api/cron/dispatch` every minute with `Authorization: Bearer $CRON_SECRET` (free; Vercel Hobby only allows daily crons). It also runs daily retention cleanup so the free 500 MB DB never fills.
+4. AI auto-reply is optional: leave `ANTHROPIC_API_KEY` empty and only keyword automations + STOP/START run (zero extra cost).
 4. Follow `META_SETUP.md`.
 5. Local: `npm install && npm run dev`.
 

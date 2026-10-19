@@ -1,0 +1,26 @@
+:root { --bg: #f6f7f9; --card: #fff; --fg: #111; --muted: #667; --accent: #128c7e; --bad: #c0392b; --line: #e3e5e8; }
+@media (prefers-color-scheme: dark) { :root { --bg: #0f1215; --card: #181c20; --fg: #eee; --muted: #99a; --line: #2a2f35; } }
+* { box-sizing: border-box; }
+body { margin: 0; display: flex; min-height: 100vh; font: 14px system-ui, sans-serif; background: var(--bg); color: var(--fg); }
+aside { width: 210px; padding: 16px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; }
+aside h2 { color: var(--accent); font-size: 18px; }
+aside a { color: var(--fg); text-decoration: none; padding: 8px 10px; border-radius: 6px; }
+aside a:hover { background: var(--line); }
+main { flex: 1; padding: 24px; overflow: auto; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+.stat b { display: block; font-size: 26px; }
+.stat span { color: var(--muted); }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--line); }
+input, select, textarea { padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--fg); }
+button { padding: 8px 14px; border: 0; border-radius: 6px; background: var(--accent); color: #fff; cursor: pointer; }
+button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.pill { padding: 2px 8px; border-radius: 99px; font-size: 12px; background: var(--line); }
+.pill.valid { background: #d4f5e9; color: #0a6b4f; } .pill.invalid { background: #fbdcdc; color: var(--bad); }
+.thread { display: flex; flex-direction: column; gap: 6px; max-height: 60vh; overflow: auto; }
+.bubble { max-width: 70%; padding: 8px 12px; border-radius: 10px; background: var(--line); white-space: pre-wrap; }
+.bubble.out { align-self: flex-end; background: #d9fdd3; color: #111; }
+.muted { color: var(--muted); font-size: 12px; }
+@media (max-width: 700px) { body { flex-direction: column; } aside { width: 100%; flex-direction: row; overflow-x: auto; } aside h2 { display: none; } }

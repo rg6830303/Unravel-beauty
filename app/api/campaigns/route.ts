@@ -1,63 +1,110 @@
+import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getSettings, nextAllowedSend } from "@/lib/settings";
+import { newToken, renderVariable } from "@/lib/personalize";
+
+export const maxDuration = 300;
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const { data } = await db.from("campaign_stats").select("*").order("created_at", { ascending: false });
   return NextResponse.json({ data });
 }
 
-// Create campaign + queue one message per eligible contact.
-// body: { name, template_name, template_language, variables[], header_media_url, audience_tags[], scheduled_at, rate_per_minute }
+// Create campaign + queue one personalised message per eligible contact.
+// body: { name, template_name, template_language, variables[], header_media_url, audience_tags[],
+//         scheduled_at, rate_per_minute, smart_send_time, dry_run }
+// Variables: "{{first_name|there}}", "{{city|your city}}", "{{any_csv_column}}", "{{link:https://site/offer}}" (click-tracked)
 export async function POST(req: NextRequest) {
   const b = await req.json();
+  const lang = b.template_language || "en";
 
-  const { data: tpl } = await db.from("templates").select("*")
-    .eq("name", b.template_name).eq("language", b.template_language || "en").single();
+  const { data: tpl } = await db.from("templates").select("*").eq("name", b.template_name).eq("language", lang).single();
   if (!tpl || tpl.status !== "APPROVED")
     return NextResponse.json({ error: "Template not found or not APPROVED. Sync templates first." }, { status: 400 });
   if (tpl.category !== "MARKETING")
     return NextResponse.json({ error: `Template category is ${tpl.category}; campaigns accept MARKETING only.` }, { status: 400 });
 
-  const { data: camp, error } = await db.from("campaigns").insert({
-    name: b.name, template_name: b.template_name, template_language: b.template_language || "en",
-    variables: b.variables || [], header_media_url: b.header_media_url || null,
-    audience_tags: b.audience_tags || [], rate_per_minute: b.rate_per_minute || 60,
-    scheduled_at: b.scheduled_at || null, status: b.scheduled_at ? "scheduled" : "running",
-  }).select().single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  // Catch the commonest cause of failed sends before anything is queued: wrong parameter count / missing header media.
+  const body = tpl.components?.find((c: any) => c.type === "BODY")?.text ?? "";
+  const need = Math.max(0, ...[...body.matchAll(/\{\{(\d+)\}\}/g)].map((m) => Number(m[1])));
+  const vars: string[] = b.variables || [];
+  if (vars.length !== need)
+    return NextResponse.json({ error: `Template body needs ${need} variable(s), you gave ${vars.length}.` }, { status: 400 });
+  const hdr = tpl.components?.find((c: any) => c.type === "HEADER");
+  if (hdr && ["IMAGE", "VIDEO", "DOCUMENT"].includes(hdr.format) && !b.header_media_url)
+    return NextResponse.json({ error: `Template has a ${hdr.format} header — provide a media URL.` }, { status: 400 });
 
-  // eligible audience: opted in, not flagged invalid
-  let skip = 0, queued = 0, excluded = 0;
+  const s = await getSettings();
+  const base = b.scheduled_at ? new Date(b.scheduled_at) : new Date();
+  const smart = b.smart_send_time !== false;
+  const origin = req.nextUrl.origin;
+  const tags: string[] = b.audience_tags || [];
+
+  let camp: any = null;
+  if (!b.dry_run) {
+    const ins = await db.from("campaigns").insert({
+      name: b.name, template_name: b.template_name, template_language: lang,
+      variables: vars, header_media_url: b.header_media_url || null, audience_tags: tags,
+      rate_per_minute: b.rate_per_minute || 600, smart_send_time: smart,
+      scheduled_at: b.scheduled_at || null, status: b.scheduled_at ? "scheduled" : "running",
+    }).select().single();
+    if (ins.error) return NextResponse.json({ error: ins.error.message }, { status: 500 });
+    camp = ins.data;
+  }
+
+  const stats = { queued: 0, invalid: 0, opted_out: 0, sunset: 0, frequency_cap: 0 };
+  const samples: string[][] = [];
+  const capMs = s.frequency_cap_days * 864e5;
+  let from = 0;
   while (true) {
-    let q = db.from("contacts").select("*").eq("opted_in", true).range(skip, skip + 999);
-    if (camp.audience_tags.length) q = q.overlaps("tags", camp.audience_tags);
+    let q = db.from("contacts").select("*").order("created_at").range(from, from + 999);
+    if (tags.length) q = q.overlaps("tags", tags);
     const { data: cs } = await q;
     if (!cs?.length) break;
-    skip += cs.length;
-    const rows = cs.filter((c) => {
-      if (c.wa_status === "invalid") { excluded++; return false; }
-      return true;
-    }).map((c) => ({
-      contact_id: c.id, campaign_id: camp.id, direction: "out", type: "template",
-      body: `[template] ${camp.template_name}`,
-      payload: {
-        template: camp.template_name, language: camp.template_language, header: camp.header_media_url,
-        vars: (camp.variables as string[]).map((v) =>
-          v.replace(/\{\{(\w+)\}\}/g, (_, k) => (k === "name" ? c.name || "there" : c.attributes?.[k] ?? c[k] ?? ""))),
-      },
-      status: "queued",
-      next_attempt_at: camp.scheduled_at || new Date().toISOString(),
-    }));
-    if (rows.length) await db.from("messages").insert(rows);
-    queued += rows.length;
+    from += cs.length;
+
+    const msgs: any[] = [], links: any[] = [];
+    for (const c of cs) {
+      if (c.wa_status === "invalid") { stats.invalid++; continue; }
+      if (!c.opted_in) { stats.opted_out++; continue; }
+      if (c.unread_streak >= s.sunset_after) { stats.sunset++; continue; }
+      if (c.last_marketing_at && Date.now() - new Date(c.last_marketing_at).getTime() < capMs - 3600e3) { stats.frequency_cap++; continue; }
+
+      const id = crypto.randomUUID();
+      const rendered = vars.map((v) =>
+        renderVariable(v, c, (url) => {
+          const token = newToken();
+          links.push({ token, url, message_id: id, contact_id: c.id, campaign_id: camp?.id ?? null });
+          return `${origin}/r/${token}`;
+        }));
+      if (samples.length < 3) samples.push(rendered);
+      stats.queued++;
+      if (b.dry_run) continue;
+
+      msgs.push({
+        id, contact_id: c.id, campaign_id: camp.id, direction: "out", type: "template",
+        body: `[template] ${camp.template_name}`,
+        payload: { template: camp.template_name, language: lang, header: camp.header_media_url, vars: rendered },
+        status: "queued",
+        // smart send time: each person gets it at the hour they usually read, never in quiet hours
+        next_attempt_at: (smart ? nextAllowedSend(s, base, c.best_hour) : nextAllowedSend(s, base)).toISOString(),
+      });
+    }
+    if (!b.dry_run && msgs.length) {
+      const m = await db.from("messages").insert(msgs);
+      if (m.error) return NextResponse.json({ error: m.error.message, campaign: camp, ...stats }, { status: 500 });
+      if (links.length) await db.from("links").insert(links);
+    }
   }
-  return NextResponse.json({ campaign: camp, queued, excluded_invalid: excluded });
+  return NextResponse.json({ campaign: camp, dry_run: !!b.dry_run, samples, ...stats, excluded_invalid: stats.invalid });
 }
 
 // pause / resume
 export async function PATCH(req: NextRequest) {
   const { id, status } = await req.json();
   if (!["paused", "running"].includes(status)) return NextResponse.json({ error: "bad status" }, { status: 400 });
-  await db.from("campaigns").update({ status }).eq("id", id);
+  await db.from("campaigns").update({ status, pause_reason: status === "paused" ? "Paused manually" : null }).eq("id", id);
   return NextResponse.json({ ok: true });
 }

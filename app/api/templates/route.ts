@@ -15,7 +15,7 @@ export async function POST() {
     const list = await fetchTemplates();
     const rows = list.map((t) => ({
       name: t.name, language: t.language, category: t.category, status: t.status,
-      components: t.components, synced_at: new Date().toISOString(),
+      quality_score: t.quality_score?.score ?? null, components: t.components, synced_at: new Date().toISOString(),
     }));
     if (rows.length) await db.from("templates").upsert(rows, { onConflict: "name,language" });
     return NextResponse.json({ synced: rows.length });

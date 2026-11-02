@@ -10,6 +10,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "@supabase/supabase-js": "^2.45.4",
+    "@vercel/functions": "^2.0.0",
     "libphonenumber-js": "^1.11.12",
     "next": "^14.2.35",
     "papaparse": "^5.4.1",

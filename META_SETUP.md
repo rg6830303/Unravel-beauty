@@ -25,7 +25,11 @@ WhatsApp Manager → Account tools → **Payment methods** → add card. Marketi
 2. App → WhatsApp → **Configuration** → Webhook → Edit:
    - Callback URL: `https://YOUR-APP.vercel.app/api/webhook`
    - Verify token: same value as `WA_VERIFY_TOKEN`
-3. **Webhook fields → Subscribe**: `messages` (required). Optional: `message_template_status_update`.
+3. **Webhook fields → Subscribe** to all of these (each one powers an automatic protection):
+   - `messages` — delivery/read/failed status + inbound chats (required)
+   - `phone_number_quality_update` — tier changes / quality flags → auto-pause on RED
+   - `message_template_status_update`, `message_template_quality_update`, `template_category_update` — a paused/rejected/re-categorised template stops its campaigns
+   - `account_update`, `account_alerts` — restrictions/violations → auto-pause everything
 4. Subscribe app to WABA (usually automatic; if not):
    `curl -X POST "https://graph.facebook.com/v21.0/WABA_ID/subscribed_apps" -H "Authorization: Bearer TOKEN"`
 

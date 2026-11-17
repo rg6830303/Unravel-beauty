@@ -1,5 +1,5 @@
 -- DESTRUCTIVE: wipes every table, view, function and type in the "public" schema
--- (old Arth Realty data), clears auth users and storage objects, then you run schema.sql.
+-- (old Arth Realty data), clears auth users, then you run schema.sql.
 -- Run in Supabase SQL editor. Cannot be undone.
 
 drop schema if exists public cascade;
@@ -11,4 +11,4 @@ alter default privileges in schema public grant all on functions to postgres, se
 alter default privileges in schema public grant all on sequences to postgres, service_role;
 
 delete from auth.users;
-delete from storage.objects;
+-- Storage files cannot be deleted from SQL (Supabase blocks it): empty buckets in Dashboard → Storage if any exist.

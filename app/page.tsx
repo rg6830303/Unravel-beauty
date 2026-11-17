@@ -28,7 +28,7 @@ export default function Dashboard() {
         <table><thead><tr><th>Code</th><th>Reason</th><th>Count</th></tr></thead><tbody>
           {Object.entries(s.errors).map(([code, e]: any) => <tr key={code}><td>{code}</td><td>{e.title}</td><td>{e.n}</td></tr>)}
         </tbody></table>
-        <p className="muted">131026 = number has no WhatsApp (auto-flagged). 131049 = Meta per-user marketing cap (auto-retried after 26h). 131050 = user stopped marketing.</p>
+        <p className="muted">131026 = number has no WhatsApp (auto-flagged). 131049 = Meta per-user marketing cap (auto-retried after 24–96h). 131050 = user stopped marketing.</p>
       </div>
     </>
   );

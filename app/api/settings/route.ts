@@ -5,7 +5,7 @@ import { refreshPhoneHealth } from "@/lib/guard";
 export const dynamic = "force-dynamic";
 
 const EDITABLE = ["frequency_cap_days", "sunset_after", "quiet_start", "quiet_end", "default_send_hour",
-  "timezone", "auto_pause_fail_pct", "daily_cap_override"];
+  "timezone", "auto_pause_fail_pct", "daily_cap_override", "max_retries", "retry_window_days"];
 
 export async function GET(req: NextRequest) {
   if (req.nextUrl.searchParams.get("refresh")) await refreshPhoneHealth(true);

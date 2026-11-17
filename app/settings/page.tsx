@@ -7,7 +7,9 @@ const FIELDS: [string, string, string][] = [
   ["quiet_start", "Quiet hours start (0–23)", "No marketing sends from this hour…"],
   ["quiet_end", "Quiet hours end (0–23)", "…until this hour."],
   ["default_send_hour", "Default send hour (0–23)", "Used for people with no read history."],
-  ["auto_pause_fail_pct", "Auto-pause campaign if failures exceed %", "Checked over the last 40 sends; ignores 'no WhatsApp' and 'user capped'."],
+  ["max_retries", "Retry a failed message up to N times", "Temporary errors retry after 1 min → 12 h; Meta's per-user cap (131049) after 24 → 96 h."],
+  ["retry_window_days", "Stop retrying N days after the campaign starts", "A message still undelivered after this is marked failed with its last reason."],
+  ["auto_pause_fail_pct", "Auto-pause campaign if failures exceed %", "Checked over the last 40 attempts; ignores 'no WhatsApp', 'user capped' and rate limits."],
 ];
 
 export default function Settings() {

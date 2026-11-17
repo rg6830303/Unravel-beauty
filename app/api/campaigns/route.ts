@@ -14,7 +14,8 @@ export async function GET() {
 
 // Create campaign + queue one personalised message per eligible contact.
 // body: { name, template_name, template_language, variables[], header_media_url, audience_tags[],
-//         scheduled_at, rate_per_minute, smart_send_time, dry_run }
+//         contact_ids[], scheduled_at, rate_per_minute, smart_send_time, dry_run }
+// Audience: contact_ids (hand-picked on the Contacts page) or audience_tags; neither = every contact.
 // Variables: "{{first_name|there}}", "{{city|your city}}", "{{any_csv_column}}", "{{link:https://site/offer}}" (click-tracked)
 export async function POST(req: NextRequest) {
   const b = await req.json();
@@ -41,6 +42,9 @@ export async function POST(req: NextRequest) {
   const smart = b.smart_send_time !== false;
   const origin = req.nextUrl.origin;
   const tags: string[] = b.audience_tags || [];
+  const ids: string[] | null = Array.isArray(b.contact_ids) && b.contact_ids.length ? b.contact_ids : null;
+  // the retry loop keeps re-sending failures until this moment
+  const expires = new Date(base.getTime() + s.retry_window_days * 864e5).toISOString();
 
   let camp: any = null;
   if (!b.dry_run) {
@@ -54,23 +58,36 @@ export async function POST(req: NextRequest) {
     camp = ins.data;
   }
 
-  const stats = { queued: 0, invalid: 0, opted_out: 0, sunset: 0, frequency_cap: 0 };
+  const stats = { queued: 0, deferred: 0, invalid: 0, opted_out: 0, sunset: 0 };
   const samples: string[][] = [];
   const capMs = s.frequency_cap_days * 864e5;
   let from = 0;
   while (true) {
-    let q = db.from("contacts").select("*").order("created_at").range(from, from + 999);
-    if (tags.length) q = q.overlaps("tags", tags);
+    let q = db.from("contacts").select("*").order("created_at");
+    if (ids) {
+      if (from >= ids.length) break;
+      q = q.in("id", ids.slice(from, from + 200));
+    } else {
+      q = q.range(from, from + 999);
+      if (tags.length) q = q.overlaps("tags", tags);
+    }
     const { data: cs } = await q;
-    if (!cs?.length) break;
-    from += cs.length;
+    if (ids) from += 200;
+    else if (!cs?.length) break;
+    else from += cs.length;
+    if (!cs?.length) continue;
 
     const msgs: any[] = [], links: any[] = [];
     for (const c of cs) {
       if (c.wa_status === "invalid") { stats.invalid++; continue; }
       if (!c.opted_in) { stats.opted_out++; continue; }
       if (c.unread_streak >= s.sunset_after) { stats.sunset++; continue; }
-      if (c.last_marketing_at && Date.now() - new Date(c.last_marketing_at).getTime() < capMs - 3600e3) { stats.frequency_cap++; continue; }
+      // messaged too recently: still gets the campaign, just after the frequency cap has passed
+      let start = base;
+      if (c.last_marketing_at) {
+        const free = new Date(c.last_marketing_at).getTime() + capMs - 3600e3;
+        if (free > base.getTime()) { start = new Date(free); stats.deferred++; }
+      }
 
       const id = crypto.randomUUID();
       const rendered = vars.map((v) =>
@@ -86,10 +103,10 @@ export async function POST(req: NextRequest) {
       msgs.push({
         id, contact_id: c.id, campaign_id: camp.id, direction: "out", type: "template",
         body: `[template] ${camp.template_name}`,
-        payload: { template: camp.template_name, language: lang, header: camp.header_media_url, vars: rendered },
-        status: "queued",
+        payload: { template: camp.template_name, language: lang, header: camp.header_media_url, header_format: hdr?.format ?? null, vars: rendered },
+        status: "queued", expires_at: expires,
         // smart send time: each person gets it at the hour they usually read, never in quiet hours
-        next_attempt_at: (smart ? nextAllowedSend(s, base, c.best_hour) : nextAllowedSend(s, base)).toISOString(),
+        next_attempt_at: (smart ? nextAllowedSend(s, start, c.best_hour) : nextAllowedSend(s, start)).toISOString(),
       });
     }
     if (!b.dry_run && msgs.length) {
@@ -101,9 +118,21 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ campaign: camp, dry_run: !!b.dry_run, samples, ...stats, excluded_invalid: stats.invalid });
 }
 
-// pause / resume
+// pause / resume / retry_failed
 export async function PATCH(req: NextRequest) {
-  const { id, status } = await req.json();
+  const { id, status, action } = await req.json();
+  if (action === "retry_failed") {
+    // Put every failed message of the campaign back into the loop with a fresh retry allowance.
+    // Opted-out and flagged contacts stay excluded: the dispatcher's final guards skip them.
+    const s = await getSettings();
+    const { data, error } = await db.from("messages").update({
+      status: "queued", retry_count: 0, wa_message_id: null, next_attempt_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + s.retry_window_days * 864e5).toISOString(),
+    }).eq("campaign_id", id).eq("status", "failed").select("id");
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (data?.length) await db.from("campaigns").update({ status: "running", pause_reason: null }).eq("id", id);
+    return NextResponse.json({ ok: true, requeued: data?.length ?? 0 });
+  }
   if (!["paused", "running"].includes(status)) return NextResponse.json({ error: "bad status" }, { status: 400 });
   await db.from("campaigns").update({ status, pause_reason: status === "paused" ? "Paused manually" : null }).eq("id", id);
   return NextResponse.json({ ok: true });

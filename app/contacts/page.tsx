@@ -9,6 +9,9 @@ export default function Contacts() {
   const [result, setResult] = useState<any>(null);
   const [country, setCountry] = useState("IN");
   const [tag, setTag] = useState("");
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const toggle = (id: string) => setSel((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const campaign = () => { sessionStorage.setItem("picked_contacts", JSON.stringify([...sel])); location.href = "/campaigns"; };
 
   const load = () => {
     const p = new URLSearchParams();
@@ -49,12 +52,15 @@ export default function Contacts() {
           <option value="invalid">Flagged: no WhatsApp</option><option value="unknown">Unverified</option>
         </select>
         <input placeholder="Search name / phone" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && load()} />
+        {sel.size > 0 && <><button onClick={campaign}>New campaign for {sel.size} selected</button>
+          <button className="ghost" onClick={() => setSel(new Set())}>Clear</button></>}
       </div>
       <div className="card">
-        <table><thead><tr><th>Phone</th><th>Name</th><th>Tags</th><th>WhatsApp</th><th>Opt-in</th><th>AI</th><th></th></tr></thead>
+        <table><thead><tr><th><input type="checkbox" checked={rows.length > 0 && rows.every((c) => sel.has(c.id))}
+          onChange={(e) => setSel(e.target.checked ? new Set([...sel, ...rows.map((c) => c.id)]) : new Set())} /></th><th>Phone</th><th>Name</th><th>Tags</th><th>WhatsApp</th><th>Opt-in</th><th>AI</th><th></th></tr></thead>
           <tbody>{rows.map((c) => (
             <tr key={c.id}>
-              <td>+{c.phone}</td><td>{c.name}</td><td>{c.tags?.join(", ")}</td>
+              <td><input type="checkbox" checked={sel.has(c.id)} onChange={() => toggle(c.id)} /></td><td>+{c.phone}</td><td>{c.name}</td><td>{c.tags?.join(", ")}</td>
               <td><span className={"pill " + c.wa_status}>{c.wa_status === "invalid" ? "⚠ no WhatsApp" : c.wa_status}</span></td>
               <td><input type="checkbox" checked={c.opted_in} onChange={(e) => patch(c.id, { opted_in: e.target.checked })} /></td>
               <td><input type="checkbox" checked={c.ai_enabled} onChange={(e) => patch(c.id, { ai_enabled: e.target.checked })} /></td>

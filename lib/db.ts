@@ -4,7 +4,8 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 let client: SupabaseClient | null = null;
 export const db = new Proxy({} as SupabaseClient, {
   get(_, prop) {
-    client ??= createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    // tests swap in a Postgres-backed stand-in through globalThis.__waTestDb
+    client ??= (globalThis as any).__waTestDb ?? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
       auth: { persistSession: false },
     });
     return (client as any)[prop];

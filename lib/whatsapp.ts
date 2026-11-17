@@ -37,11 +37,14 @@ export function sendTemplate(
   name: string,
   language: string,
   bodyVars: string[] = [],
-  headerMediaUrl?: string | null
+  headerMediaUrl?: string | null,
+  headerFormat?: string | null
 ) {
   const components: any[] = [];
   if (headerMediaUrl) {
-    const kind = /\.(mp4|3gp)(\?|$)/i.test(headerMediaUrl) ? "video" : /\.pdf(\?|$)/i.test(headerMediaUrl) ? "document" : "image";
+    // the template decides the header type; the file extension is only a fallback for older queued messages
+    const kind = headerFormat ? headerFormat.toLowerCase()
+      : /\.(mp4|3gp)(\?|$)/i.test(headerMediaUrl) ? "video" : /\.pdf(\?|$)/i.test(headerMediaUrl) ? "document" : "image";
     components.push({ type: "header", parameters: [{ type: kind, [kind]: { link: headerMediaUrl } }] });
   }
   if (bodyVars.length)
@@ -78,23 +81,11 @@ export async function fetchPhoneHealth() {
 }
 
 export function verifySignature(raw: string, sig: string | null) {
-  if (!process.env.WA_APP_SECRET) return true;
+  if (!process.env.WA_APP_SECRET) return false; // fail closed: unsigned events could forge delivery statuses
   if (!sig) return false;
   const exp = "sha256=" + crypto.createHmac("sha256", process.env.WA_APP_SECRET).update(raw).digest("hex");
   return sig.length === exp.length && crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(exp));
 }
-
-// Meta error codes -> how we treat them
-export const ERR = {
-  NOT_ON_WHATSAPP: [131026],                 // receiver incapable / no WhatsApp account
-  USER_MARKETING_CAP: [131049],              // Meta per-user marketing limit ("healthy ecosystem")
-  RATE_LIMIT: [130429, 131048, 131056, 80007, 4, 80008],
-  RETRYABLE: [131000, 131016, 1, 2, 130472, 133004, 133005],
-  OPTED_OUT_MARKETING: [131050],             // user stopped marketing messages
-  PAYMENT: [131042],                         // payment method problem -> pause everything
-  BAD_TEMPLATE: [132000, 132001, 132005, 132007, 132012, 132015, 132016], // template/params problems: stop the campaign
-  ACCOUNT: [131031, 131030, 190],            // account locked / bad token -> pause everything
-};
 
 // Run async jobs with a concurrency limit.
 export async function pool<T>(items: T[], size: number, fn: (x: T) => Promise<void>) {
@@ -104,4 +95,44 @@ export async function pool<T>(items: T[], size: number, fn: (x: T) => Promise<vo
       while (i < items.length) await fn(items[i++]);
     })
   );
+}
+
+async function graph(path: string, init: RequestInit = {}, token = process.env.WA_ACCESS_TOKEN) {
+  const r = await fetch(`${BASE}/${path}`, {
+    ...init, headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, signal: AbortSignal.timeout(15_000),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error?.message || `Meta request failed (${r.status})`);
+  return j;
+}
+
+export const WEBHOOK_FIELDS = ["messages", "phone_number_quality_update", "message_template_status_update",
+  "message_template_quality_update", "template_category_update", "account_update", "account_alerts"];
+
+// Apps that receive this WhatsApp account's webhooks.
+export async function subscribedApps(): Promise<any[]> {
+  return (await graph(`${process.env.WA_BUSINESS_ACCOUNT_ID}/subscribed_apps`)).data ?? [];
+}
+
+export function subscribeWaba() {
+  return graph(`${process.env.WA_BUSINESS_ACCOUNT_ID}/subscribed_apps`, { method: "POST" });
+}
+
+const appToken = () => `${process.env.WA_APP_ID}|${process.env.WA_APP_SECRET}`;
+
+// Points the Meta app's WhatsApp webhook at this deployment. Meta calls the URL back with the verify token before accepting.
+export function setAppWebhook(callbackUrl: string) {
+  return graph(`${process.env.WA_APP_ID}/subscriptions`, {
+    method: "POST",
+    body: JSON.stringify({
+      object: "whatsapp_business_account", callback_url: callbackUrl,
+      verify_token: process.env.WA_VERIFY_TOKEN, fields: WEBHOOK_FIELDS.join(","),
+    }),
+  }, appToken());
+}
+
+export async function appWebhook(): Promise<{ callback_url?: string; fields: string[]; active?: boolean } | null> {
+  const j = await graph(`${process.env.WA_APP_ID}/subscriptions`, {}, appToken());
+  const sub = (j.data ?? []).find((x: any) => x.object === "whatsapp_business_account");
+  return sub ? { callback_url: sub.callback_url, active: sub.active, fields: (sub.fields ?? []).map((f: any) => f.name) } : null;
 }

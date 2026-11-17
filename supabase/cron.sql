@@ -1,5 +1,6 @@
 -- Free scheduler: Supabase pg_cron + pg_net call the Vercel dispatcher every minute.
--- Replaces Vercel Pro cron (Hobby only allows daily crons). Run after schema.sql.
+-- Only needed on Vercel Hobby (vercel.json already runs the dispatcher every minute on Pro).
+-- The retention job at the bottom is useful on any plan. Run after schema.sql.
 -- Replace YOUR-APP and YOUR_CRON_SECRET first.
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
@@ -20,6 +21,7 @@ select cron.schedule('wa-retention', '0 3 * * *', $$
   update messages set payload = null
     where direction = 'in' and payload is not null and created_at < now() - interval '30 days';
   delete from messages where created_at < now() - interval '180 days';
+  delete from send_attempts where created_at < now() - interval '30 days';
   delete from wa_events where created_at < now() - interval '7 days';
   delete from net._http_response where created < now() - interval '1 day';
 $$);

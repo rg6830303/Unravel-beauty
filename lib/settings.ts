@@ -9,6 +9,9 @@ export type Settings = {
   timezone: string;
   auto_pause_fail_pct: number;
   daily_cap_override: number | null;
+  max_retries: number;
+  retry_window_days: number;
+  dispatcher_last_run: Record<string, any>;
   phone_health: { quality_rating?: string; messaging_limit_tier?: string; checked_at?: string };
 };
 
@@ -17,6 +20,7 @@ export async function getSettings(): Promise<Settings> {
   const s: any = {
     frequency_cap_days: 2, sunset_after: 6, quiet_start: 21, quiet_end: 9, default_send_hour: 11,
     timezone: "Asia/Kolkata", auto_pause_fail_pct: 25, daily_cap_override: null, phone_health: {},
+    max_retries: 5, retry_window_days: 7, dispatcher_last_run: {},
   };
   for (const r of data ?? []) s[r.key] = r.value;
   return s;

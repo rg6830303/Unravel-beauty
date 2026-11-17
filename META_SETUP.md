@@ -15,14 +15,14 @@
 2. **Add assets** → assign your app (Full control) and your WhatsApp account (Full control).
 3. **Generate new token** → select app → expiration **Never** → permissions: `whatsapp_business_messaging`, `whatsapp_business_management`, `business_management`.
 4. Save → `WA_ACCESS_TOKEN`.
-5. App → Settings → Basic → **App Secret** → `WA_APP_SECRET`.
+5. App → Settings → Basic → **App ID** → `WA_APP_ID`, **App Secret** → `WA_APP_SECRET` (required — webhooks without a valid signature are rejected).
 
 ## 4. Payment
 WhatsApp Manager → Account tools → **Payment methods** → add card. Marketing messages are charged per delivered message; without payment, template sends fail.
 
 ## 5. Deploy, then connect webhook
 1. Deploy this app to Vercel (see README) so you have `https://YOUR-APP.vercel.app`.
-2. App → WhatsApp → **Configuration** → Webhook → Edit:
+2. Easiest: dashboard → **Setup & health** → **Connect Meta webhooks** (sets the callback URL, subscribes every field below and subscribes the app to your WhatsApp account). Manual alternative — App → WhatsApp → **Configuration** → Webhook → Edit:
    - Callback URL: `https://YOUR-APP.vercel.app/api/webhook`
    - Verify token: same value as `WA_VERIFY_TOKEN`
 3. **Webhook fields → Subscribe** to all of these (each one powers an automatic protection):

@@ -6,7 +6,7 @@ import { appWebhook, fetchPhoneHealth, setAppWebhook, subscribeWaba, subscribedA
 export const dynamic = "force-dynamic";
 
 const ENV = ["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "WA_PHONE_NUMBER_ID", "WA_BUSINESS_ACCOUNT_ID",
-  "WA_ACCESS_TOKEN", "WA_APP_ID", "WA_APP_SECRET", "WA_VERIFY_TOKEN", "DASHBOARD_PASSWORD", "CRON_SECRET"];
+  "WA_ACCESS_TOKEN", "WA_APP_ID", "WA_APP_SECRET", "WA_VERIFY_TOKEN", "AUTH_SECRET", "ADMIN_EMAILS", "CRON_SECRET"];
 
 type Check = { name: string; ok: boolean; detail: string };
 const attempt = async (name: string, fn: () => Promise<string>): Promise<Check> => {

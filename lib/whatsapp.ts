@@ -55,18 +55,44 @@ export function sendTemplate(
   );
 }
 
-export function markRead(messageId: string) {
-  return post({ status: "read", message_id: messageId });
+// Session (24h window) message builders, modelled on Meta's Jasper's Market sample.
+const ctx = (replyTo?: string) => (replyTo ? { context: { message_id: replyTo } } : {});
+
+export function sendButtons(to: string, body: string, buttons: { id: string; title: string }[], replyTo?: string) {
+  if (!buttons.length || buttons.length > 3) throw new Error("1–3 reply buttons allowed");
+  return post({
+    to, type: "interactive", ...ctx(replyTo),
+    interactive: { type: "button", body: { text: body },
+      action: { buttons: buttons.map((b) => ({ type: "reply", reply: { id: b.id, title: b.title.slice(0, 20) } })) } },
+  });
 }
 
-export async function fetchTemplates() {
-  const r = await fetch(
-    `${BASE}/${process.env.WA_BUSINESS_ACCOUNT_ID}/message_templates?limit=200&fields=name,language,category,status,quality_score,components`,
-    { headers: headers() }
-  );
-  const j = await r.json();
-  if (!r.ok) throw new Error(j.error?.message || "template fetch failed");
-  return j.data as any[];
+export function sendList(to: string, body: string, button: string,
+  sections: { title: string; rows: { id: string; title: string; description?: string }[] }[], replyTo?: string) {
+  return post({
+    to, type: "interactive", ...ctx(replyTo),
+    interactive: { type: "list", body: { text: body }, action: { button: button.slice(0, 20), sections } },
+  });
+}
+
+export function sendCtaUrl(to: string, body: string, label: string, url: string) {
+  return post({
+    to, type: "interactive",
+    interactive: { type: "cta_url", body: { text: body }, action: { name: "cta_url", parameters: { display_text: label, url } } },
+  });
+}
+
+export function sendMedia(to: string, kind: "image" | "video" | "document" | "audio", link: string, caption?: string) {
+  return post({ to, type: kind, [kind]: { link, ...(caption && kind !== "audio" ? { caption } : {}) } });
+}
+
+// Shows "typing…" to the customer and marks their message read (Cloud API typing indicator).
+export function typing(messageId: string) {
+  return post({ status: "read", message_id: messageId, typing_indicator: { type: "text" } });
+}
+
+export function markRead(messageId: string) {
+  return post({ status: "read", message_id: messageId });
 }
 
 // Quality rating (GREEN/YELLOW/RED) and daily messaging tier of the sending number.

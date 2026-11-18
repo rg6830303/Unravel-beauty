@@ -2,7 +2,7 @@
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
-import { fetchTemplates } from "@/lib/whatsapp";
+import { listTemplates } from "@/lib/meta";
 
 export async function GET() {
   const { data } = await db.from("templates").select("*").order("name");
@@ -12,7 +12,7 @@ export async function GET() {
 // Sync approved templates from Meta
 export async function POST() {
   try {
-    const list = await fetchTemplates();
+    const list = await listTemplates();
     const rows = list.map((t) => ({
       name: t.name, language: t.language, category: t.category, status: t.status,
       quality_score: t.quality_score?.score ?? null, components: t.components, synced_at: new Date().toISOString(),

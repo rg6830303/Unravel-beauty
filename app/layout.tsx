@@ -5,7 +5,7 @@ export const metadata = { title: "WA Outreach" };
 
 const NAV = [
   ["/", "Dashboard"], ["/contacts", "Contacts"], ["/campaigns", "Campaigns"],
-  ["/inbox", "Inbox"], ["/templates", "Templates"], ["/automations", "AI & Automations"], ["/settings", "Delivery settings"], ["/setup", "Setup & health"],
+  ["/inbox", "Inbox"], ["/templates", "Templates"], ["/automations", "AI & Automations"], ["/settings", "Delivery settings"], ["/whatsapp", "WhatsApp Business"], ["/setup", "Setup & health"],
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

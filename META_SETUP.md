@@ -54,3 +54,20 @@ App → top toggle **Live** mode (requires Privacy Policy URL in Settings → Ba
 
 ## 10. Marketing Messages Lite API (MM API for WhatsApp) — recommended
 Meta's dedicated marketing-message path with delivery optimization. WhatsApp Manager → Overview → **Marketing Messages** onboarding (if eligible in your region). Once onboarded, sends to the same `/messages` endpoint are routed through it (or use `/marketing_messages` per Meta docs). Improves deliverability; still not 100%.
+
+## 11. WhatsApp Business Tools (MCP + dashboard)
+Meta's official **WhatsApp Business Tools MCP** (`https://mcp.facebook.com/whatsapp_business_tools`, beta) is preconfigured in `.mcp.json`. Open Claude Code in this repo, run `/mcp`, sign in with your Meta developer account (no client ID / redirect URI needed) and grant `business_management`, `whatsapp_business_management`, `whatsapp_business_messaging`. Verify with "list my WhatsApp businesses" (`whatsapp_biz_businesses`).
+
+The same tool set is built into the dashboard so day-to-day work does not need an agent. It runs on `WA_ACCESS_TOKEN` (system user token) via `/api/meta/<tool>`:
+
+| MCP tool | Dashboard | API |
+|---|---|---|
+| `whatsapp_biz_businesses` / `_accounts` / `_phone_numbers` | WhatsApp Business page | `GET /api/meta/businesses`, `accounts?business_id=`, `phone_numbers` |
+| `_add_phone_number` → `_send_verification_code` → `_verify_phone_number` → `_register_phone_number` | WhatsApp Business → Onboard a number | `POST /api/meta/add_phone_number` … `register_phone_number` |
+| `_list_templates` / `_get_template` / `_create_template` / `_update_template` / `_delete_template` | Templates page | `GET list_templates`, `get_template?id=`; `POST create_template`, `update_template`, `delete_template` |
+| `_send_message` | Inbox (24h window) / campaigns | `POST send_message` (requires `confirm: true`) |
+| `_configure_webhooks` / `_subscribe_webhook` | Setup & health → Connect Meta webhooks | `POST /api/health` |
+| `_verify_business` / `_configure_payments` / `_system_user_token` | WhatsApp Business page (links into Business Settings) | `GET verify_business?business_id=`, `configure_payments`, `system_user_token?business_id=` |
+| token check | WhatsApp Business → Access token | `GET token` (needs `WA_APP_ID`/`WA_APP_SECRET`) |
+
+Session messages also support interactive reply buttons, lists, CTA URL buttons, media and the typing indicator (`lib/whatsapp.ts`), following Meta's Jasper's Market sample.

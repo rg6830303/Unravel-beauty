@@ -51,7 +51,7 @@ describe("WhatsApp Business tools", () => {
     expect(first.status).toBe(409);
     const ok = await call(POST, "send_message", { to: "+91 98765 43210", template: "promo", confirm: true });
     expect((await ok.json()).data.id).toBe("wamid.1");
-    expect(calls.at(-1)!.body).toMatchObject({ to: "919876543210", type: "template" });
+    expect(calls.find((c) => c.url.includes("/111/messages"))!.body).toMatchObject({ to: "919876543210", type: "template" });
   });
   it("unknown tools 404", async () => {
     expect((await call(GET, "nope")).status).toBe(404);

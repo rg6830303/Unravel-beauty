@@ -44,12 +44,14 @@ const writes: Record<string, (b: any) => Promise<unknown>> = {
       ? await sendTemplate(to, b.template, b.language || "en_US", b.variables ?? [])
       : await sendText(to, need(b.text, "text"));
     // record it like any other outbound message so it shows in the inbox and webhook statuses attach to it
-    const { data: c } = await db.from("contacts").upsert({ phone: to }, { onConflict: "phone", ignoreDuplicates: false }).select("id").single();
-    if (c) await db.from("messages").insert({
-      contact_id: c.id, direction: "out", type: b.template ? "template" : "text",
-      body: b.template ? `[template] ${b.template}` : b.text, status: r.ok ? "sent" : "failed",
-      wa_message_id: r.ok ? r.id : null, error_code: r.ok ? null : r.code, error_title: r.ok ? null : r.title,
-    });
+    try {
+      const { data: c } = await db.from("contacts").upsert({ phone: to }, { onConflict: "phone" }).select("id").single();
+      if (c) await db.from("messages").insert({
+        contact_id: c.id, direction: "out", type: b.template ? "template" : "text",
+        body: b.template ? `[template] ${b.template}` : b.text, status: r.ok ? "sent" : "failed",
+        wa_message_id: r.ok ? r.id : null, error_code: r.ok ? null : r.code, error_title: r.ok ? null : r.title,
+      });
+    } catch (e) { console.error("send_message: logging failed", e); } // the send already happened; don't report it as failed
     if (!r.ok) throw new meta.MetaError(r.title, r.code, 502);
     return r;
   },

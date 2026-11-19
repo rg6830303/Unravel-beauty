@@ -35,14 +35,15 @@ const writes: Record<string, (b: any) => Promise<unknown>> = {
     await db.from("templates").delete().eq("name", b.name);
     return r;
   },
+  // Optional b.from = phone number ID to send from (defaults to WA_PHONE_NUMBER_ID).
   // Free-form text only lands inside the 24h customer-service window; templates work any time.
   send_message: async (b) => {
     const to = normalizePhone(need(b.to, "to"));
     if (!to) throw new meta.MetaError("Invalid phone number", 100, 400);
     if (!b.confirm) throw new meta.MetaError(`Confirm sending to +${to} by resending with confirm: true`, 100, 409);
     const r = b.template
-      ? await sendTemplate(to, b.template, b.language || "en_US", b.variables ?? [])
-      : await sendText(to, need(b.text, "text"));
+      ? await sendTemplate(to, b.template, b.language || "en_US", b.variables ?? [], null, null, b.from)
+      : await sendText(to, need(b.text, "text"), b.from);
     // record it like any other outbound message so it shows in the inbox and webhook statuses attach to it
     try {
       const { data: c } = await db.from("contacts").upsert({ phone: to }, { onConflict: "phone" }).select("id").single();

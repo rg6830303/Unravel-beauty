@@ -9,9 +9,10 @@ const headers = () => ({
 
 export type WaResult = { ok: true; id: string } | { ok: false; code: number; title: string };
 
-async function post(body: object, path = "messages"): Promise<WaResult> {
+// fromId: send from another registered number on the account instead of WA_PHONE_NUMBER_ID
+async function post(body: object, path = "messages", fromId?: string): Promise<WaResult> {
   try {
-    const r = await fetch(`${BASE}/${process.env.WA_PHONE_NUMBER_ID}/${path}`, {
+    const r = await fetch(`${BASE}/${fromId || process.env.WA_PHONE_NUMBER_ID}/${path}`, {
       method: "POST",
       headers: headers(),
       body: JSON.stringify({ messaging_product: "whatsapp", ...body }),
@@ -26,8 +27,8 @@ async function post(body: object, path = "messages"): Promise<WaResult> {
   }
 }
 
-export function sendText(to: string, text: string) {
-  return post({ to, type: "text", text: { body: text, preview_url: true } });
+export function sendText(to: string, text: string, fromId?: string) {
+  return post({ to, type: "text", text: { body: text, preview_url: true } }, "messages", fromId);
 }
 
 // WA_USE_MM_LITE=1 routes marketing templates through Meta's Marketing Messages Lite API
@@ -38,7 +39,8 @@ export function sendTemplate(
   language: string,
   bodyVars: string[] = [],
   headerMediaUrl?: string | null,
-  headerFormat?: string | null
+  headerFormat?: string | null,
+  fromId?: string
 ) {
   const components: any[] = [];
   if (headerMediaUrl) {
@@ -51,7 +53,8 @@ export function sendTemplate(
     components.push({ type: "body", parameters: bodyVars.map((t) => ({ type: "text", text: t })) });
   return post(
     { to, type: "template", template: { name, language: { code: language }, components } },
-    process.env.WA_USE_MM_LITE === "1" ? "marketing_messages" : "messages"
+    process.env.WA_USE_MM_LITE === "1" ? "marketing_messages" : "messages",
+    fromId
   );
 }
 

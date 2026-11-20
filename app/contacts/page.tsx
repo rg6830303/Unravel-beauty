@@ -1,11 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useApi } from "@/lib/client";
 
 export default function Contacts() {
-  const [rows, setRows] = useState<any[]>([]);
-  const [count, setCount] = useState(0);
   const [filter, setFilter] = useState("");
   const [q, setQ] = useState("");
+  const [applied, setApplied] = useState("");
   const [result, setResult] = useState<any>(null);
   const [country, setCountry] = useState("IN");
   const [tag, setTag] = useState("");
@@ -13,13 +13,12 @@ export default function Contacts() {
   const toggle = (id: string) => setSel((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const campaign = () => { sessionStorage.setItem("picked_contacts", JSON.stringify([...sel])); location.href = "/campaigns"; };
 
-  const load = () => {
-    const p = new URLSearchParams();
-    if (filter) p.set("wa_status", filter);
-    if (q) p.set("q", q);
-    fetch("/api/contacts?" + p).then((r) => r.json()).then((j) => { setRows(j.data || []); setCount(j.count || 0); });
-  };
-  useEffect(load, [filter]);
+  const p = new URLSearchParams();
+  if (filter) p.set("wa_status", filter);
+  if (applied) p.set("q", applied);
+  const { data, reload: load } = useApi("/api/contacts?" + p, 20000);
+  const rows: any[] = data?.data || [];
+  const count: number = data?.count || 0;
 
   async function upload(f: File) {
     const fd = new FormData();
@@ -34,6 +33,7 @@ export default function Contacts() {
   return (
     <>
       <h1>Contacts ({count})</h1>
+      {count > rows.length && <p className="muted">Showing the newest {rows.length} of {count}. Use search or the filter to narrow down.</p>}
       <div className="card">
         <h3>Upload CSV</h3>
         <p className="muted">Columns: <code>phone</code> (required), <code>name</code>, <code>tags</code>; extra columns become variables usable as {"{{column}}"}.</p>
@@ -51,7 +51,8 @@ export default function Contacts() {
           <option value="">All</option><option value="valid">On WhatsApp</option>
           <option value="invalid">Flagged: no WhatsApp</option><option value="unknown">Unverified</option>
         </select>
-        <input placeholder="Search name / phone" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && load()} />
+        <input placeholder="Search name / phone" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && setApplied(q)} />
+        <button className="ghost" onClick={() => setApplied(q)}>Search</button>
         {sel.size > 0 && <><button onClick={campaign}>New campaign for {sel.size} selected</button>
           <button className="ghost" onClick={() => setSel(new Set())}>Clear</button></>}
       </div>
@@ -64,7 +65,7 @@ export default function Contacts() {
               <td><span className={"pill " + c.wa_status}>{c.wa_status === "invalid" ? "⚠ no WhatsApp" : c.wa_status}</span></td>
               <td><input type="checkbox" checked={c.opted_in} onChange={(e) => patch(c.id, { opted_in: e.target.checked })} /></td>
               <td><input type="checkbox" checked={c.ai_enabled} onChange={(e) => patch(c.id, { ai_enabled: e.target.checked })} /></td>
-              <td><button className="ghost" onClick={() => fetch("/api/contacts?id=" + c.id, { method: "DELETE" }).then(load)}>Delete</button></td>
+              <td><button className="ghost" onClick={() => confirm(`Delete +${c.phone}?`) && fetch("/api/contacts?id=" + c.id, { method: "DELETE" }).then(load)}>Delete</button></td>
             </tr>))}
           </tbody></table>
       </div>

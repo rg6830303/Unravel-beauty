@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -28,5 +28,7 @@ export async function GET() {
     byCode[k] = byCode[k] || { title: e.error_title, n: 0 };
     byCode[k].n++;
   }
-  return NextResponse.json({ contacts, valid, invalid, unknown, optedOut, sent, delivered, read, failed, inbound, aiReplies, errors: byCode });
+  // per-browser cache: reopening the dashboard within a few seconds reuses the 12 counts instead of re-running them
+  return NextResponse.json({ contacts, valid, invalid, unknown, optedOut, sent, delivered, read, failed, inbound, aiReplies, errors: byCode },
+    { headers: { "Cache-Control": "private, max-age=10, stale-while-revalidate=60" } });
 }

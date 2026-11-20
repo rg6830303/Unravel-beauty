@@ -1,3 +1,4 @@
+html { color-scheme: light dark; }
 :root { --bg: #f6f7f9; --card: #fff; --fg: #111; --muted: #667; --accent: #128c7e; --bad: #c0392b; --line: #e3e5e8; }
 @media (prefers-color-scheme: dark) { :root { --bg: #0f1215; --card: #181c20; --fg: #eee; --muted: #99a; --line: #2a2f35; } }
 * { box-sizing: border-box; }
@@ -24,3 +25,9 @@ button.ghost { background: transparent; color: var(--accent); border: 1px solid 
 .bubble.out { align-self: flex-end; background: #d9fdd3; color: #111; }
 .muted { color: var(--muted); font-size: 12px; }
 @media (max-width: 700px) { body { flex-direction: column; } aside { width: 100%; flex-direction: row; overflow-x: auto; } aside h2 { display: none; } }
+aside a.active { background: var(--line); font-weight: 600; }
+aside a.logout { margin-top: auto; color: var(--muted); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.card { overflow-x: auto; }
+main > .card:only-child, article.card { margin-inline: auto; }

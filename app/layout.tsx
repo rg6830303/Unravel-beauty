@@ -1,23 +1,12 @@
 import "./globals.css";
-import Link from "next/link";
+import Shell from "./shell";
 
 export const metadata = { title: "WA Outreach" };
-
-const NAV = [
-  ["/", "Dashboard"], ["/contacts", "Contacts"], ["/campaigns", "Campaigns"],
-  ["/inbox", "Inbox"], ["/templates", "Templates"], ["/automations", "AI & Automations"], ["/settings", "Delivery settings"], ["/whatsapp", "WhatsApp Business"], ["/setup", "Setup & health"],
-];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
-        <aside>
-          <h2>WA Outreach</h2>
-          {NAV.map(([href, label]) => <Link key={href} href={href}>{label}</Link>)}
-        </aside>
-        <main>{children}</main>
-      </body>
+      <body><Shell>{children}</Shell></body>
     </html>
   );
 }

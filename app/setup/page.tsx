@@ -1,21 +1,20 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { api, useApi } from "@/lib/client";
 
 export default function Setup() {
-  const [h, setH] = useState<any>(null);
+  const { data: h, error, reload: load } = useApi("/api/health");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
-  const load = () => fetch("/api/health").then((r) => r.json()).then(setH);
-  useEffect(() => { load(); }, []);
 
   async function act(url: string, done: (j: any) => string) {
     setBusy(true); setMsg("");
-    const j = await (await fetch(url, { method: "POST" })).json();
+    const j = await api(url, { method: "POST" });
     setBusy(false);
     setMsg(j.error || done(j));
     load();
   }
-  if (!h) return <p>Checking…</p>;
+  if (!h) return <p>{error ? `Health check failed: ${error}` : "Checking… (a few seconds)"}</p>;
   return (
     <>
       <h1>Setup &amp; health</h1>

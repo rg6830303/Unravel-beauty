@@ -1,22 +1,21 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { api, useApi } from "@/lib/client";
 
 const blank = { name: "", language: "en_US", category: "MARKETING", header: "", body: "", examples: "", footer: "", stop: true };
 
 export default function Templates() {
-  const [list, setList] = useState<any[]>([]);
+  const { data, reload: load } = useApi("/api/templates", 30000);
+  const list: any[] = data?.data || [];
   const [msg, setMsg] = useState("");
   const [f, setF] = useState(blank);
   const set = (k: keyof typeof blank) => (e: any) => setF({ ...f, [k]: e.target.type === "checkbox" ? e.target.checked : e.target.value });
-  const load = () => fetch("/api/templates").then((r) => r.json()).then((j) => setList(j.data || []));
-  useEffect(() => { load(); }, []);
   async function sync() {
-    const j = await (await fetch("/api/templates", { method: "POST" })).json();
+    const j = await api("/api/templates", { method: "POST" });
     setMsg(j.error || `Synced ${j.synced} templates`); load();
   }
   async function call(action: string, body: object) {
-    const j = await (await fetch(`/api/meta/${action}`, { method: "POST", body: JSON.stringify(body) })).json();
-    return j;
+    return api(`/api/meta/${action}`, { method: "POST", body: JSON.stringify(body) });
   }
   async function create() {
     const components: any[] = [];

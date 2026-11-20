@@ -1,10 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useApi } from "@/lib/client";
 
 export default function Dashboard() {
-  const [s, setS] = useState<any>(null);
-  useEffect(() => { fetch("/api/stats").then((r) => r.json()).then(setS); }, []);
-  if (!s) return <p>Loading…</p>;
+  const { data: s, error } = useApi("/api/stats", 30000);
+  if (!s) return <p>{error ? `Could not load stats: ${error}` : "Loading…"}</p>;
   const pct = (a: number, b: number) => (b ? ((a / b) * 100).toFixed(1) + "%" : "–");
   const attempted = s.sent + s.failed;
   const tiles = [
@@ -26,7 +25,7 @@ export default function Dashboard() {
       <div className="card">
         <h3>Failure reasons (7d)</h3>
         <table><thead><tr><th>Code</th><th>Reason</th><th>Count</th></tr></thead><tbody>
-          {Object.entries(s.errors).map(([code, e]: any) => <tr key={code}><td>{code}</td><td>{e.title}</td><td>{e.n}</td></tr>)}
+          {Object.entries(s.errors ?? {}).map(([code, e]: any) => <tr key={code}><td>{code}</td><td>{e.title}</td><td>{e.n}</td></tr>)}
         </tbody></table>
         <p className="muted">131026 = number has no WhatsApp (auto-flagged). 131049 = Meta per-user marketing cap (auto-retried after 24–96h). 131050 = user stopped marketing.</p>
       </div>

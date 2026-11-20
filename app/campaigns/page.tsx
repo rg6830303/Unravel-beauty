@@ -1,24 +1,21 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useApi } from "@/lib/client";
 
 export default function Campaigns() {
-  const [list, setList] = useState<any[]>([]);
-  const [tpls, setTpls] = useState<any[]>([]);
+  const { data: campData, reload: load } = useApi("/api/campaigns", 10000);
+  const list: any[] = campData?.data || [];
+  const { data: tplData } = useApi("/api/templates");
+  const tpls: any[] = (tplData?.data || []).filter((t: any) => t.category === "MARKETING" && t.status === "APPROVED");
   const [f, setF] = useState<any>({ name: "", tpl: "", variables: "", header_media_url: "", tags: "", scheduled_at: "", rate_per_minute: 600, smart: true });
   const [msg, setMsg] = useState("");
   const [preview, setPreview] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [picked, setPicked] = useState<string[]>([]);
 
-  const load = () => fetch("/api/campaigns").then((r) => r.json()).then((j) => setList(j.data || []));
   useEffect(() => {
-    load();
     // contacts hand-picked on the Contacts page
     try { setPicked(JSON.parse(sessionStorage.getItem("picked_contacts") || "[]")); } catch {}
-    fetch("/api/templates").then((r) => r.json()).then((j) =>
-      setTpls((j.data || []).filter((t: any) => t.category === "MARKETING" && t.status === "APPROVED")));
-    const t = setInterval(load, 10000);
-    return () => clearInterval(t);
   }, []);
 
   const sel = tpls.find((t) => `${t.name}|${t.language}` === f.tpl);

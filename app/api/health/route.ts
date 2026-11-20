@@ -23,13 +23,15 @@ export async function GET(req: NextRequest) {
   }];
   const has = (...keys: string[]) => keys.every((k) => process.env[k]);
 
+  // every check is an independent network call, so run them together instead of one after another
+  const jobs: Promise<Check>[] = [];
   if (has("NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY")) {
-    checks.push(await attempt("Database schema", async () => {
+    jobs.push(attempt("Database schema", async () => {
       const { error } = await db.from("send_attempts").select("id", { count: "exact", head: true });
       if (error) throw new Error(`${error.message} — run supabase/schema.sql`);
       return "Tables found";
     }));
-    checks.push(await attempt("Outreach loop", async () => {
+    jobs.push(attempt("Outreach loop", async () => {
       const run = (await getSettings()).dispatcher_last_run;
       if (!run?.at) throw new Error("The dispatcher has not run yet");
       const age = Math.round((Date.now() - new Date(run.at).getTime()) / 1000);
@@ -38,18 +40,18 @@ export async function GET(req: NextRequest) {
     }));
   }
   if (has("WA_ACCESS_TOKEN", "WA_PHONE_NUMBER_ID"))
-    checks.push(await attempt("WhatsApp number", async () => {
+    jobs.push(attempt("WhatsApp number", async () => {
       const h = await fetchPhoneHealth();
       return `${h.display_phone_number ?? "number"} · quality ${h.quality_rating ?? "?"} · ${h.messaging_limit_tier ?? "tier ?"} · ${h.status ?? ""}`;
     }));
   if (has("WA_ACCESS_TOKEN", "WA_BUSINESS_ACCOUNT_ID"))
-    checks.push(await attempt("App subscribed to WhatsApp account", async () => {
+    jobs.push(attempt("App subscribed to WhatsApp account", async () => {
       const apps = await subscribedApps();
       if (!apps.length) throw new Error("No app receives this account's webhooks — press Connect Meta webhooks");
       return apps.map((a: any) => a.whatsapp_business_api_data?.name ?? a.name ?? "app").join(", ");
     }));
   if (has("WA_APP_ID", "WA_APP_SECRET"))
-    checks.push(await attempt("Webhook callback", async () => {
+    jobs.push(attempt("Webhook callback", async () => {
       const w = await appWebhook();
       const want = `${req.nextUrl.origin}/api/webhook`;
       if (!w) throw new Error("No WhatsApp webhook on the Meta app — press Connect Meta webhooks");
@@ -58,6 +60,7 @@ export async function GET(req: NextRequest) {
       if (lacking.length) throw new Error(`Not subscribed to: ${lacking.join(", ")}`);
       return `${w.callback_url} · ${w.fields.length} fields`;
     }));
+  checks.push(...(await Promise.all(jobs)));
   return NextResponse.json({ ok: checks.every((c) => c.ok), checks });
 }
 

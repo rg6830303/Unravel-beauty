@@ -5,7 +5,7 @@ import { readSession, SESSION_COOKIE } from "@/lib/session";
 // Fails CLOSED: with no AUTH_SECRET configured nothing is accessible.
 export async function middleware(req: NextRequest) {
   const p = req.nextUrl.pathname;
-  if (p.startsWith("/api/webhook") || p.startsWith("/api/cron") || p.startsWith("/r/") || ["/privacy", "/terms", "/data-deletion"].includes(p) || p === "/login" || p === "/api/login")
+  if (p.startsWith("/api/webhook") || p.startsWith("/api/cron") || p.startsWith("/r/") || p.startsWith("/media/") || ["/privacy", "/terms", "/data-deletion"].includes(p) || p === "/login" || p === "/api/login")
     return NextResponse.next();
 
   if (await readSession(req.cookies.get(SESSION_COOKIE)?.value)) return NextResponse.next();

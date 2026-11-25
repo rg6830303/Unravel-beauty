@@ -27,6 +27,17 @@ async function post(body: object, path = "messages", fromId?: string): Promise<W
   }
 }
 
+// Authentication (OTP) template: the code goes in the body and again in the copy-code button.
+export function sendAuthCode(to: string, name: string, language: string, code: string, fromId?: string) {
+  return post({
+    to, type: "template",
+    template: { name, language: { code: language }, components: [
+      { type: "body", parameters: [{ type: "text", text: code }] },
+      { type: "button", sub_type: "url", index: "0", parameters: [{ type: "text", text: code }] },
+    ] },
+  }, "messages", fromId);
+}
+
 export function sendText(to: string, text: string, fromId?: string) {
   return post({ to, type: "text", text: { body: text, preview_url: true } }, "messages", fromId);
 }

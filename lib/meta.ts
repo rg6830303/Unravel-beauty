@@ -101,6 +101,8 @@ export function validateTemplate(t: TemplateInput): string | null {
   if (!/^[a-z0-9_]{1,512}$/.test(t.name)) return "Name: lowercase letters, digits and underscores only";
   if (!t.language) return "Language required (e.g. en_US)";
   const body = t.components?.find((c) => c.type === "BODY");
+  // authentication templates have Meta-written text: the body only toggles the security line
+  if (t.category === "AUTHENTICATION") return t.components?.some((c) => c.type === "BUTTONS" && c.buttons?.some((b: any) => b.type === "OTP")) ? null : "Authentication templates need an OTP button";
   if (!body?.text) return "A BODY component with text is required";
   if (body.text.length > 1024) return "Body is limited to 1024 characters";
   const vars = [...body.text.matchAll(/\{\{(\d+)\}\}/g)].map((m) => +m[1]);

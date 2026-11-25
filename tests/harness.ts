@@ -146,7 +146,7 @@ export async function createDb() {
     sql: async <T = any>(q: string, params: any[] = []) => (await pg.query<T>(q, params)).rows.map(row) as T[],
     // empty every table and restore the seeded settings, with quiet hours off unless a test turns them on
     reset: async () => {
-      await pg.exec("truncate contacts, campaigns, messages, links, wa_events, send_attempts, templates, automations, knowledge, settings cascade");
+      await pg.exec("truncate contacts, campaigns, messages, links, wa_events, send_attempts, templates, automations, knowledge, settings, otp_codes cascade");
       for (const d of defaults) await pg.query("insert into settings (key, value) values ($1, $2)", [d.key, JSON.stringify(d.value)]);
       await pg.exec(`update settings set value = '0' where key in ('quiet_start', 'quiet_end');
         insert into templates (name, language, category, status, components) values
